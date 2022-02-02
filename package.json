@@ -1,0 +1,68 @@
+{
+    "name": "nft-generator",
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/cjs/index.js",
+    "module": "dist/esm/index.js",
+    "types": "dist/@types/index.d.ts",
+    "scripts": {
+        "start": "ts-node src/index.ts",
+        "watch": "nodemon",
+        "clean": "rm -rf dist",
+        "build": "npm-run-all clean build:esm build:cjs build:types",
+        "build:cjs": "tsc -p tsconfig.prod.json --module CommonJS --outDir dist/cjs && cp .build/package.cjs.json dist/cjs/package.json",
+        "build:esm": "tsc -p tsconfig.prod.json && cp .build/package.esm.json dist/esm/package.json",
+        "build:types": "tsc -p tsconfig.prod.json --declaration --declarationMap --emitDeclarationOnly --declarationDir dist/@types",
+        "reinstall": "npm run clean && rm -rf node_modules package-lock.json && npm install",
+        "ig": "npm-run-all build && npm i -g ."
+    },
+    "bin": "dist/cjs/index.js",
+    "exports": {
+        ".": {
+            "import": "./dist/cjs/index.js",
+            "export": "./dist/esm/index.js"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/maxijonson/nft-generator.git"
+    },
+    "keywords": [],
+    "files": [
+        "dist"
+    ],
+    "author": "Tristan Chin",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/maxijonson/nft-generator/issues"
+    },
+    "homepage": "https://github.com/maxijonson/nft-generator#readme",
+    "engines": {
+        "node": "16.x"
+    },
+    "dependencies": {
+        "chalk": "^4.1.2",
+        "dotenv": "^15.0.0",
+        "inquirer": "^8.2.0",
+        "lodash": "4.17.21",
+        "yargs": "^17.3.1"
+    },
+    "devDependencies": {
+        "@types/inquirer": "^8.2.0",
+        "@types/lodash": "4.14.178",
+        "@types/yargs": "^17.0.8",
+        "@typescript-eslint/eslint-plugin": "5.10.1",
+        "@typescript-eslint/parser": "5.10.1",
+        "eslint": "8.8.0",
+        "eslint-config-airbnb": "19.0.4",
+        "eslint-config-prettier": "8.3.0",
+        "eslint-config-typescript": "3.0.0",
+        "eslint-plugin-import": "2.25.4",
+        "eslint-plugin-prettier": "4.0.0",
+        "nodemon": "2.0.15",
+        "npm-run-all": "4.1.5",
+        "prettier": "2.5.1",
+        "ts-node": "10.4.0",
+        "typescript": "4.5.5"
+    }
+}
