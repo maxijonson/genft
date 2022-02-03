@@ -1,9 +1,12 @@
 import fs from "fs";
 import path from "path";
 import Command, { CommandHandler } from "./Command";
-import getCollectionConfig, {
+import {
     CollectionConfig,
-} from "../utils/getCollectionConfig";
+    getCollectionConfig,
+    isFolderNameSafe,
+    validateConfig,
+} from "../utils";
 import { CollectionAlreadyExistsError, CollectionNameError } from "../errors";
 
 interface Args {
@@ -33,7 +36,7 @@ class CreateCommand extends Command<Args> {
         const { collection, layer, file } = args;
         let collectionConfig: CollectionConfig;
 
-        if (collection.includes("/") || collection.includes("\\")) {
+        if (!isFolderNameSafe(collection)) {
             throw new CollectionNameError();
         }
 
@@ -44,7 +47,8 @@ class CreateCommand extends Command<Args> {
             fs.mkdirSync(path.join(process.cwd(), collection, "nfts"));
             collectionConfig = {
                 name: collection,
-                layers: {},
+                layerOrder: [],
+                layerGroups: {},
             };
             fs.writeFileSync(
                 path.join(process.cwd(), collection, "config.json"),
@@ -54,6 +58,8 @@ class CreateCommand extends Command<Args> {
             collectionConfig = getCollectionConfig(collection);
             if (!layer && !file) throw new CollectionAlreadyExistsError();
         }
+
+        validateConfig(collection, collectionConfig);
     };
 }
 

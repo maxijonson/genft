@@ -1,0 +1,110 @@
+{
+    "name": "test-collection",
+    "layerOrder": ["background", ["alpha", "beta", "charlie"], ["foo", "bar", "baz"], "accessory"],
+    "layerGroups": {
+        "background": {
+            "rarity": 0,
+            "layers": [
+                {
+                    "name": "black",
+                    "rarity": 0
+                },
+                {
+                    "name": "white",
+                    "rarity": 0.75
+                }
+            ]
+        },
+        "alpha": {
+            "rarity": 0,
+            "layers": [
+                {
+                    "name": "black",
+                    "rarity": 0
+                },
+                {
+                    "name": "white",
+                    "rarity": 0.75
+                }
+            ]
+        },
+        "beta": {
+            "rarity": 0.5,
+            "layers": [
+                {
+                    "name": "black",
+                    "rarity": 0
+                },
+                {
+                    "name": "white",
+                    "rarity": 0.75
+                }
+            ]
+        },
+        "charlie": {
+            "rarity": 0.25,
+            "layers": [
+                {
+                    "name": "black",
+                    "rarity": 0
+                },
+                {
+                    "name": "white",
+                    "rarity": 0.75
+                }
+            ]
+        },
+        "foo": {
+            "rarity": 0,
+            "layers": [
+                {
+                    "name": "black",
+                    "rarity": 0
+                },
+                {
+                    "name": "white",
+                    "rarity": 0.75
+                }
+            ]
+        },
+        "bar": {
+            "rarity": 0.5,
+            "layers": [
+                {
+                    "name": "black",
+                    "rarity": 0
+                },
+                {
+                    "name": "white",
+                    "rarity": 0.75
+                }
+            ]
+        },
+        "baz": {
+            "rarity": 0.25,
+            "layers": [
+                {
+                    "name": "black",
+                    "rarity": 0
+                },
+                {
+                    "name": "white",
+                    "rarity": 0.75
+                }
+            ]
+        },
+        "accessory": {
+            "rarity": 0.5,
+            "layers": [
+                {
+                    "name": "hat",
+                    "rarity": 0
+                },
+                {
+                    "name": "watch",
+                    "rarity": 0.75
+                }
+            ]
+        }
+    }
+}

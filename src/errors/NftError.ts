@@ -6,7 +6,11 @@ class NftError extends Error {
     }
 
     public print() {
-        const at = this.stack?.split("\n")[1]?.split("at ")[1] ?? "";
+        const at =
+            this.stack
+                ?.substring(this.stack.indexOf("\n    at "))
+                .split("    at ")[1]
+                ?.trim() ?? "";
         console.error(
             chalk.red(
                 `${this.constructor.name}: ${this.message}${

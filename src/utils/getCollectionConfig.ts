@@ -6,14 +6,19 @@ import {
 } from "../errors";
 
 export interface Layer {
-    group: string;
     name: string;
     rarity: number;
 }
 
+export interface LayerGroup {
+    rarity: number;
+    layers: Layer[];
+}
+
 export interface CollectionConfig {
     name: string;
-    layers: { [group: string]: Layer[] };
+    layerGroups: { [group: string]: LayerGroup };
+    layerOrder: (string | string[])[];
 }
 
 export default (collection: string) => {
