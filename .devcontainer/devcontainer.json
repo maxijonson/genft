@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.209.6/containers/typescript-node
 {
-    "name": "nft-generator",
+    "name": "genft",
     "build": {
         "dockerfile": "Dockerfile",
         // Update 'VARIANT' to pick a Node version: 16, 14, 12.
