@@ -11,8 +11,14 @@ import NftError from "./errors/NftError";
 (async () => {
     try {
         // Load all commands from the commands directory, except the Command.ts file
-        const commandFiles = fs.readdirSync(path.join(__dirname, "commands"));
-        commandFiles.splice(commandFiles.indexOf("Command.ts"), 1);
+        const commandFiles = fs
+            .readdirSync(path.join(__dirname, "commands"))
+            .reduce((acc, file) => {
+                if (file.split(".")[0] !== "Command") {
+                    acc.push(file);
+                }
+                return acc;
+            }, [] as string[]);
 
         // Use import to load the commands
         const commands: Command<unknown>[] = await Promise.all(
