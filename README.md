@@ -1,4 +1,4 @@
-# genft
+# GeNFT
 
 Generate an NFT collection in a blink! Just give the layers and it'll generate multiple combinations of these layers. It doesn't stop here! You can also specify rarities for layer items!
 
