@@ -5,3 +5,6 @@ export { default as CollectionNotFoundError } from "./CollectionNotFoundError";
 export { default as CollectionConfigMissingError } from "./CollectionConfigMissingError";
 export { default as LayerNameError } from "./LayerNameError";
 export { default as CollectionConfigError } from "./CollectionConfigError";
+export { default as LayerAlreadyExistsError } from "./LayerAlreadyExistsError";
+export { default as FileTypeError } from "./FileTypeError";
+export { default as FileNotFoundError } from "./FileNotFoundError";

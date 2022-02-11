@@ -5,6 +5,7 @@ import path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import Command from "./commands/Command";
+import { CLI_NAME } from "./config/constants";
 import NftError from "./errors/NftError";
 
 (async () => {
@@ -22,14 +23,10 @@ import NftError from "./errors/NftError";
             })
         );
 
-        let y = yargs(hideBin(process.argv))
-            .scriptName("nft-generator")
-            .command("$0", "Interactive Mode", {}, () => {
-                console.info("Interactive Mode");
-            });
+        yargs(hideBin(process.argv)).scriptName(CLI_NAME);
 
         commands.forEach((command) => {
-            y = y.command(
+            yargs.command(
                 command.getCommand(),
                 command.getDescription(),
                 command.getBuilder(),
@@ -37,7 +34,8 @@ import NftError from "./errors/NftError";
             );
         });
 
-        const { argv: _argv } = y;
+        // eslint-disable-next-line no-unused-expressions
+        await yargs.demandCommand().wrap(yargs.terminalWidth()).argv;
     } catch (e) {
         if (e instanceof NftError) {
             e.print();

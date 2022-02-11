@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import Logger from "../utils/Logger";
 
 class NftError extends Error {
     constructor(message = "Unexpected error.") {
@@ -11,14 +12,12 @@ class NftError extends Error {
                 ?.substring(this.stack.indexOf("\n    at "))
                 .split("    at ")[1]
                 ?.trim() ?? "";
-        console.error(
-            chalk.red(
-                `${this.constructor.name}: ${this.message}${
-                    process.env.NODE_ENV === "development"
-                        ? ` (${chalk.bold(at)})`
-                        : ""
-                }`
-            )
+        Logger.error(
+            `${this.constructor.name}: ${this.message}${
+                process.env.NODE_ENV === "development"
+                    ? ` (${chalk.bold(at)})`
+                    : ""
+            }`
         );
     }
 }

@@ -60,6 +60,7 @@
                 "allow": ["warn", "error", "info"]
             }
         ],
+        "no-plusplus": "off",
         "no-param-reassign": [
             "warn",
             {
