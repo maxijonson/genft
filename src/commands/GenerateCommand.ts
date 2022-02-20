@@ -5,6 +5,7 @@ import sharp from "sharp";
 import {
     DEFAULT_AMOUNT,
     LAYERS_FOLDER,
+    LAYER_EXT,
     MAX_TRIES,
     NFTS_FOLDER,
     NFT_EXT,
@@ -109,8 +110,6 @@ class GenerateCommand extends Command<Args> {
                 const nftName = this.getNftName(imageLayers);
                 if (nftNames.has(nftName)) {
                     if (tries === MAX_TRIES) {
-                        console.info(collection.layerOrder);
-                        console.info(collection.layerGroups);
                         throw new GeneratorError(
                             `Failed to generate unique NFT after ${MAX_TRIES} tries`
                         );
@@ -181,7 +180,7 @@ class GenerateCommand extends Command<Args> {
                     collectionPath,
                     LAYERS_FOLDER,
                     layerGroup,
-                    layer.name
+                    layer.name + LAYER_EXT
                 );
                 return layerPath;
             });
