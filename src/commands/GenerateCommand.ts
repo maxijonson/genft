@@ -58,11 +58,11 @@ class GenerateCommand extends Command<Args> {
 
     public handler: CommandHandler<Args> = async (args) => {
         const { amount } = args;
-        const collection = getCollectionConfig(args.collection);
-        const collectionPath = path.join(process.cwd(), args.collection);
+        const collectionPath = path.resolve(process.cwd(), args.collection);
+        const collection = getCollectionConfig(collectionPath);
 
         // Config errors past this point should be GeneratorErrors, not CollectionConfigErrors
-        validateConfig(args.collection, collection);
+        validateConfig(collectionPath, collection);
 
         const amounts: Amounts = getLayerAmounts(collection, amount);
         const { layerOrder } = collection;

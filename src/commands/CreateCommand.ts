@@ -48,35 +48,35 @@ class CreateCommand extends Command<Args> {
     }
 
     public handler: CommandHandler<Args> = (args) => {
-        const { collection, layer, file } = args;
+        const { layer, file } = args;
         let collectionConfig: Collection;
-        const collectionPath = path.join(process.cwd(), collection);
+        const collectionPath = path.resolve(process.cwd(), args.collection);
+        const collectionName = path.basename(collectionPath);
 
-        if (!isFolderNameSafe(collection)) {
+        if (!isFolderNameSafe(collectionName)) {
             throw new CollectionNameError();
         }
 
         // Check if the collection exists. If it doesn't create a folder for it with a config.json file.
         if (!fs.existsSync(collectionPath)) {
-            fs.mkdirSync(collectionPath);
+            fs.mkdirSync(collectionPath, { recursive: true });
             fs.mkdirSync(path.join(collectionPath, LAYERS_FOLDER));
             fs.mkdirSync(path.join(collectionPath, NFTS_FOLDER));
             collectionConfig = {
-                name: collection,
+                name: collectionName,
                 layerOrder: [],
                 layerGroups: {},
             };
-            Logger.success(`Created collection '${collection}'`);
+            Logger.success(`Created collection '${collectionName}'`);
             if (!layer) {
-                saveConfig(collectionConfig);
+                saveConfig(collectionPath, collectionConfig);
             }
         } else {
-            collectionConfig = getCollectionConfig(collection);
+            collectionConfig = getCollectionConfig(collectionPath);
             if (!layer && !file) throw new CollectionAlreadyExistsError();
         }
 
-        validateConfig(collection, collectionConfig);
-        Logger.success("Configuration file is valid");
+        validateConfig(collectionPath, collectionConfig);
 
         try {
             if (layer) {
@@ -119,11 +119,10 @@ class CreateCommand extends Command<Args> {
                         fs.copyFileSync(
                             f,
                             path.join(
-                                process.cwd(),
-                                collection,
+                                collectionPath,
                                 LAYERS_FOLDER,
                                 layer,
-                                layerName
+                                layerName + LAYER_EXT
                             )
                         );
                         collectionConfig.layerGroups[layer]?.layers.push({
@@ -137,11 +136,11 @@ class CreateCommand extends Command<Args> {
                 }
             }
         } catch (e) {
-            saveConfig(collectionConfig);
+            saveConfig(collectionPath, collectionConfig);
             throw e;
         }
 
-        saveConfig(collectionConfig);
+        saveConfig(collectionPath, collectionConfig);
     };
 }
 

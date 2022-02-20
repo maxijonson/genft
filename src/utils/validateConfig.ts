@@ -5,13 +5,9 @@ import { CollectionConfigError } from "../errors";
 import { Collection } from "../types";
 import { isFolderNameSafe } from ".";
 
-export default (collection: string, config: Collection) => {
-    const { name, layerGroups, layerOrder } = config;
-    const collectionPath = path.join(process.cwd(), collection);
+export default (collectionPath: string, config: Collection) => {
+    const { layerGroups, layerOrder } = config;
 
-    if (typeof name !== "string" || name !== collection) {
-        throw new CollectionConfigError("Collection name mismatch.");
-    }
     if (!fs.existsSync(collectionPath)) {
         throw new CollectionConfigError("Collection folder does not exist.");
     }

@@ -6,15 +6,14 @@ import {
 } from "../errors";
 import { Collection } from "../types";
 
-export default (collection: string): Collection => {
-    const collectionPath = path.join(process.cwd(), collection);
+export default (collectionPath: string): Collection => {
     const configPath = path.join(collectionPath, "config.json");
 
     if (!fs.existsSync(collectionPath)) {
-        throw new CollectionNotFoundError(collection);
+        throw new CollectionNotFoundError(collectionPath);
     }
     if (!fs.existsSync(configPath)) {
-        throw new CollectionConfigMissingError(collection);
+        throw new CollectionConfigMissingError(collectionPath);
     }
 
     return JSON.parse(fs.readFileSync(configPath, "utf8"));
