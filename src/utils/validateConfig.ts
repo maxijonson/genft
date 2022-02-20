@@ -81,9 +81,12 @@ export default (collection: string, config: Collection) => {
             raritySum += layer.rarity;
         });
 
-        if (!hasAutoLayer && raritySum !== 1 && group.layers.length > 1) {
+        if (
+            raritySum > 1 ||
+            (!hasAutoLayer && raritySum !== 1 && group.layers.length > 1)
+        ) {
             throw new CollectionConfigError(
-                `${groupName}'s layers do not add up to 1. Use 0 on at least one layer to make it's rarity automatic or make sure their rarity sum is equal to 1.`
+                `${groupName}'s layers rarity do not add up to 1. Use 0 on at least one layer to make its rarity automatic or make sure their rarity sum is equal to 1.`
             );
         }
     });
@@ -108,7 +111,6 @@ export default (collection: string, config: Collection) => {
                     `Found layerOrder '${order}' as single element. Remove the array and use the layer name or add more layers to the array.`
                 );
             }
-            let hasAutoLayer = false;
             let raritySum = 0;
             _.forEach(order, (layer) => {
                 if (typeof layer !== "string") {
@@ -128,12 +130,9 @@ export default (collection: string, config: Collection) => {
                     );
                 }
                 usedLayerOrder.push(layer);
-                if (layerGroup.rarity === 0) {
-                    hasAutoLayer = true;
-                }
                 raritySum += layerGroup.rarity;
             });
-            if (!hasAutoLayer && raritySum !== 1) {
+            if (raritySum > 1) {
                 throw new CollectionConfigError(
                     `'${order.join(
                         ", "

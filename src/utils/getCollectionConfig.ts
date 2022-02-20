@@ -4,8 +4,9 @@ import {
     CollectionConfigMissingError,
     CollectionNotFoundError,
 } from "../errors";
+import { Collection } from "../types";
 
-export default (collection: string) => {
+export default (collection: string): Collection => {
     const collectionPath = path.join(process.cwd(), collection);
     const configPath = path.join(collectionPath, "config.json");
 

@@ -19,6 +19,7 @@ import {
 import {
     DEFAULT_RARITY,
     LAYERS_FOLDER,
+    LAYER_EXT,
     NFTS_FOLDER,
 } from "../config/constants";
 import { Collection } from "../types";
@@ -39,7 +40,7 @@ class CreateCommand extends Command<Args> {
                 layer: { type: "string", desc: "Layer name" },
                 file: {
                     type: "string",
-                    desc: "File(s) or directory containing the .png assets of the layer",
+                    desc: `File(s) or directory containing the ${LAYER_EXT} assets of the layer`,
                     normalize: true,
                 },
             }
@@ -108,13 +109,13 @@ class CreateCommand extends Command<Args> {
                               .readdirSync(filePath)
                               .map((f) => path.join(filePath, f))
                         : [filePath];
-                    const pngFiles = files.filter((f) => f.endsWith(".png"));
+                    const pngFiles = files.filter((f) => f.endsWith(LAYER_EXT));
                     if (pngFiles.length === 0) {
                         throw new FileTypeError();
                     }
 
                     pngFiles.forEach((f) => {
-                        const layerName = path.basename(f, ".png");
+                        const layerName = path.basename(f, LAYER_EXT);
                         fs.copyFileSync(
                             f,
                             path.join(

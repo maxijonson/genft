@@ -2,3 +2,5 @@ node_modules
 dist
 .vscode
 test-collection
+logical-gates
+logical-gates-commands.txt

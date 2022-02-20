@@ -28,6 +28,7 @@
         }
     },
     "rules": {
+        "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-unused-vars": [
             "warn",
@@ -60,6 +61,7 @@
                 "allow": ["warn", "error", "info"]
             }
         ],
+        "no-continue": "off",
         "no-plusplus": "off",
         "no-param-reassign": [
             "warn",
