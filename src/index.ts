@@ -6,7 +6,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import Command from "./commands/Command";
 import { CLI_NAME } from "./config/constants";
-import NftError from "./errors/NftError";
+import { handleError } from "./utils";
 
 (async () => {
     try {
@@ -43,14 +43,6 @@ import NftError from "./errors/NftError";
         // eslint-disable-next-line no-unused-expressions
         await yargs.demandCommand().wrap(yargs.terminalWidth()).argv;
     } catch (e) {
-        if (e instanceof NftError) {
-            e.print();
-        } else if (e instanceof Error) {
-            new NftError(e.message).print();
-            console.error(e);
-        } else {
-            new NftError().print();
-            console.error(e);
-        }
+        handleError(e);
     }
 })();
