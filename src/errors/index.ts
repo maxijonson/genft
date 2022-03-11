@@ -9,3 +9,4 @@ export { default as LayerAlreadyExistsError } from "./LayerAlreadyExistsError";
 export { default as FileTypeError } from "./FileTypeError";
 export { default as FileNotFoundError } from "./FileNotFoundError";
 export { default as GeneratorError } from "./GeneratorError";
+export { default as OptionError } from "./OptionError";

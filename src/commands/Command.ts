@@ -1,15 +1,21 @@
 import _ from "lodash";
 import yargs from "yargs";
 
-export interface CommandHandler<A> {
-    (args: yargs.ArgumentsCamelCase<A>): void | Promise<void>;
+// Empty Object
+type E = Record<string, never>;
+
+export interface CommandHandler<P = E, O = E> {
+    (args: yargs.ArgumentsCamelCase<P & O>): void | Promise<void>;
 }
 
-abstract class Command<A> {
+abstract class Command<P = E, O = E> {
     constructor(
         private command: string | readonly string[],
         private description: string,
-        private builder: { [key in keyof A]: yargs.PositionalOptions }
+        private positionals: {
+            [key in keyof P]: yargs.PositionalOptions;
+        } = {} as P,
+        private options: { [key in keyof O]: yargs.Options } = {} as O
     ) {}
 
     public getCommand() {
@@ -20,15 +26,18 @@ abstract class Command<A> {
         return this.description;
     }
 
-    public getBuilder(): yargs.BuilderCallback<A, A> {
+    public getBuilder(): yargs.BuilderCallback<P, P> {
         return (args) => {
-            _.forEach(this.builder, (opt, key) => {
-                args.positional(key, opt);
+            _.forEach(this.positionals, (pos, key) => {
+                args.positional(key, pos);
+            });
+            _.forEach(this.options, (opt, key) => {
+                args.option(key, opt);
             });
         };
     }
 
-    public abstract handler: CommandHandler<A>;
+    public abstract handler: CommandHandler<P, O>;
 }
 
 export default Command;

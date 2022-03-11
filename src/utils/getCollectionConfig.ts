@@ -5,6 +5,7 @@ import {
     CollectionNotFoundError,
 } from "../errors";
 import { Collection } from "../types";
+import validateConfig from "./validateConfig";
 
 export default (collectionPath: string): Collection => {
     const configPath = path.join(collectionPath, "config.json");
@@ -16,5 +17,7 @@ export default (collectionPath: string): Collection => {
         throw new CollectionConfigMissingError(collectionPath);
     }
 
-    return JSON.parse(fs.readFileSync(configPath, "utf8"));
+    const collection = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    validateConfig(collectionPath, collection);
+    return collection;
 };

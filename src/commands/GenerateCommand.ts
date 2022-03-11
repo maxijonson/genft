@@ -16,12 +16,11 @@ import {
     getLayerAmounts,
     handleError,
     Logger,
-    validateConfig,
 } from "../utils";
 import Command, { CommandHandler } from "./Command";
 import { GeneratorError } from "../errors";
 
-interface Args {
+interface Positionals {
     collection: string;
     amount: number;
 }
@@ -31,7 +30,7 @@ interface ImageLayer {
     layer: Layer;
 }
 
-class GenerateCommand extends Command<Args> {
+class GenerateCommand extends Command<Positionals> {
     constructor() {
         super(
             "generate <collection> [amount]",
@@ -43,7 +42,7 @@ class GenerateCommand extends Command<Args> {
                 },
                 amount: {
                     type: "number",
-                    desc: "The amount of NFTs to generate",
+                    desc: "The desired amount of NFTs to generate. May be rounded up if the rarity is not evenly divisible by the amount.",
                     default: DEFAULT_AMOUNT,
                 },
             }
@@ -58,14 +57,11 @@ class GenerateCommand extends Command<Args> {
         return names.join("_");
     };
 
-    public handler: CommandHandler<Args> = async (args) => {
+    public handler: CommandHandler<Positionals> = async (args) => {
         try {
             const { amount } = args;
             const collectionPath = path.resolve(process.cwd(), args.collection);
             const collection = getCollectionConfig(collectionPath);
-
-            // Config errors past this point should be GeneratorErrors, not CollectionConfigErrors
-            validateConfig(collectionPath, collection);
 
             const amounts: Amounts = getLayerAmounts(collection, amount);
             const { layerOrder } = collection;

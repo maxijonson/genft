@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import _ from "lodash";
+import { Logger } from ".";
 import { Amounts } from "../types";
 
 export default (amounts: Amounts) => {
@@ -12,7 +13,7 @@ export default (amounts: Amounts) => {
             // Align the layer names to the longest layer name
             if (amt.rounded) {
                 roundedLayerAmt += 1;
-                amountStr += chalk.blue(
+                amountStr += chalk.yellow(
                     `\t- ${layer.padStart(20)}: ${amt.value}\n`
                 );
             } else {
@@ -21,11 +22,11 @@ export default (amounts: Amounts) => {
             totalLayerAmt += amt.value;
         });
 
-        console.info(
+        Logger.info(
             `${layerGroup}: ${totalLayerAmt}${
                 roundedLayerAmt ? ` (${roundedLayerAmt} rounded)` : ""
             }`
         );
-        console.info(amountStr);
+        Logger.info(amountStr);
     });
 };

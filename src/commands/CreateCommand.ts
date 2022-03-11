@@ -6,7 +6,6 @@ import {
     isFolderNameSafe,
     Logger,
     saveConfig,
-    validateConfig,
 } from "../utils";
 import {
     CollectionAlreadyExistsError,
@@ -24,13 +23,13 @@ import {
 } from "../config/constants";
 import { Collection } from "../types";
 
-interface Args {
+interface Positionals {
     collection: string;
     layer?: string;
     file?: string;
 }
 
-class CreateCommand extends Command<Args> {
+class CreateCommand extends Command<Positionals> {
     constructor() {
         super(
             "create <collection> [layer] [file]",
@@ -47,9 +46,9 @@ class CreateCommand extends Command<Args> {
         );
     }
 
-    public handler: CommandHandler<Args> = (args) => {
+    public handler: CommandHandler<Positionals> = (args) => {
         const { layer, file } = args;
-        let collectionConfig: Collection;
+        let collection: Collection;
         const collectionPath = path.resolve(process.cwd(), args.collection);
         const collectionName = path.basename(collectionPath);
 
@@ -62,39 +61,38 @@ class CreateCommand extends Command<Args> {
             fs.mkdirSync(collectionPath, { recursive: true });
             fs.mkdirSync(path.join(collectionPath, LAYERS_FOLDER));
             fs.mkdirSync(path.join(collectionPath, NFTS_FOLDER));
-            collectionConfig = {
+            collection = {
                 name: collectionName,
                 layerOrder: [],
                 layerGroups: {},
             };
             Logger.success(`Created collection '${collectionName}'`);
             if (!layer) {
-                saveConfig(collectionPath, collectionConfig);
+                saveConfig(collectionPath, collection);
             }
         } else {
-            collectionConfig = getCollectionConfig(collectionPath);
+            collection = getCollectionConfig(collectionPath);
             if (!layer && !file) throw new CollectionAlreadyExistsError();
         }
-
-        validateConfig(collectionPath, collectionConfig);
 
         try {
             if (layer) {
                 if (!isFolderNameSafe(layer)) {
                     throw new LayerNameError();
                 }
-                if (collectionConfig.layerGroups[layer] && !file) {
+                if (collection.layerGroups[layer] && !file) {
                     throw new LayerAlreadyExistsError();
                 }
-                if (!collectionConfig.layerGroups[layer]) {
+                if (!collection.layerGroups[layer]) {
                     fs.mkdirSync(
                         path.join(collectionPath, LAYERS_FOLDER, layer)
                     );
-                    collectionConfig.layerGroups[layer] = {
+                    collection.layerGroups[layer] = {
                         rarity: DEFAULT_RARITY,
+                        required: true,
                         layers: [],
                     };
-                    collectionConfig.layerOrder.push(layer);
+                    collection.layerOrder.push(layer);
                     Logger.success(`Created layer group '${layer}'`);
                 }
 
@@ -125,7 +123,7 @@ class CreateCommand extends Command<Args> {
                                 layerName + LAYER_EXT
                             )
                         );
-                        collectionConfig.layerGroups[layer]?.layers.push({
+                        collection.layerGroups[layer]?.layers.push({
                             name: layerName,
                             rarity: DEFAULT_RARITY,
                         });
@@ -136,11 +134,11 @@ class CreateCommand extends Command<Args> {
                 }
             }
         } catch (e) {
-            saveConfig(collectionPath, collectionConfig);
+            saveConfig(collectionPath, collection);
             throw e;
         }
 
-        saveConfig(collectionPath, collectionConfig);
+        saveConfig(collectionPath, collection);
     };
 }
 
