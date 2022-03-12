@@ -1,144 +1,168 @@
 import _ from "lodash";
 import fs from "fs";
 import path from "path";
+import Joi from "joi";
 import { CollectionConfigError } from "../errors";
 import { Collection } from "../types";
-import { isFolderNameSafe } from ".";
+
+const safeName = Joi.string()
+    .regex(/^[a-zA-Z0-9_-]+$/)
+    .min(1);
+const layerName = safeName.label("Layer name");
+const nameSchema = safeName.required().label("Collection name");
+const rarity = Joi.number().min(0).max(1);
+
+const layerGroupsSchema = Joi.object()
+    .pattern(
+        safeName,
+        Joi.object({
+            rarity: rarity.required(),
+            layers: Joi.array()
+                .items(
+                    Joi.object({
+                        name: Joi.string()
+                            .regex(/^[a-zA-Z0-9_-\s]+$/)
+                            .min(1)
+                            .required(),
+                        rarity: rarity.required(),
+                    })
+                )
+                .unique((a, b) => a.name === b.name)
+                .required(),
+        })
+    )
+    .required()
+    .label("Layer groups");
+
+const layerOrderSchema = Joi.array()
+    .items(layerName, Joi.array().items(layerName).unique().min(2))
+    .unique((a, b) => {
+        // Make sure a layer never appears twice in the layerOrder
+        // This would be a nice feature to have, but it would make it too complicated to calculate the amounts
+        if (typeof a === "string" && typeof b === "object") {
+            return b.includes(a);
+        }
+        if (typeof a === "object" && typeof b === "string") {
+            return a.includes(b);
+        }
+        if (typeof a === "object" && typeof b === "object") {
+            return a.some((x: string) => b.includes(x));
+        }
+        return a === b;
+    })
+    .min(1)
+    .required()
+    .label("Layer order");
+
+const collectionSchema = Joi.object({
+    name: nameSchema,
+    layerOrder: layerOrderSchema,
+    layerGroups: layerGroupsSchema,
+})
+    // Make sure each layer order are in the layerGroups
+    .custom((value: Collection) => {
+        const { layerOrder, layerGroups } = value;
+        layerOrder.forEach((layer: Collection["layerOrder"][0]) => {
+            const v = typeof layer === "string" ? [layer] : layer;
+            v.forEach((name) => {
+                if (!layerGroups[name]) {
+                    throw new Error(
+                        `layer order '${name}' is not in the collection's layer groups.`
+                    );
+                }
+            });
+        });
+        return value;
+    }, "Layer order in layer groups")
+    // Make sure rarity sum does not exceed 1
+    // Also make sure auto layers (rarity 0) have sufficient rarity left to fill the rest
+    .custom((value: Collection) => {
+        _.forEach(value.layerOrder, (order) => {
+            if (typeof order === "string") return; // Single layers may have any rarity (rarity 0 is 1)
+            let hasAutoLayer = false;
+            const sum = order.reduce((acc, group) => {
+                const r = value.layerGroups[group]?.rarity ?? 0;
+                if (r === 0) {
+                    hasAutoLayer = true;
+                }
+                return acc + r;
+            }, 0);
+            if (sum > 1) {
+                throw new Error(
+                    `The sum of the layer groups' rarity in layer order "${order.join(
+                        ", "
+                    )}" must not exceed 1.`
+                );
+            }
+            if (hasAutoLayer && sum === 1) {
+                throw new Error(
+                    `No remaining rarity for auto layers of layer order "${order.join(
+                        ", "
+                    )}".`
+                );
+            }
+        });
+        return value;
+    }, "Layer groups rarity")
+    // Make sure each layer group layers rarity sum is 1 or contains auto layer(s)
+    // Also make sure auto layers (rarity 0) have sufficient rarity left to fill the rest
+    .custom((value: Collection) => {
+        _.forEach(value.layerGroups, (layerGroup, layerGroupName) => {
+            let hasAutoLayer = false;
+            const sum = layerGroup.layers.reduce((acc, layer) => {
+                if (layer.rarity === 0) {
+                    hasAutoLayer = true;
+                }
+                return acc + layer.rarity;
+            }, 0);
+            if (sum > 1) {
+                throw new Error(
+                    `The sum of the layers rarity in layer group "${layerGroupName}" must not exceed 1.`
+                );
+            }
+            if (hasAutoLayer && sum === 1) {
+                throw new Error(
+                    `No remaining rarity for auto layers of layer group "${layerGroupName}".`
+                );
+            }
+            if (!hasAutoLayer && sum !== 1) {
+                throw new Error(
+                    `The sum of the layers rarity in layer group "${layerGroupName}" must be 1 or contain at least one auto layer (rarity 0).`
+                );
+            }
+        });
+        return value;
+    }, "Layers rarity")
+    .label("Collection");
 
 export default (collectionPath: string, config: Collection) => {
-    const { layerGroups, layerOrder } = config;
+    const { layerGroups } = config;
 
     if (!fs.existsSync(collectionPath)) {
         throw new CollectionConfigError("Collection folder does not exist.");
     }
 
-    if (!_.isArray(layerOrder)) {
-        throw new CollectionConfigError("layerOrder is not an array.");
-    }
-    if (!_.isObject(layerGroups)) {
-        throw new CollectionConfigError("layerGroups is not an object.");
+    const { error } = collectionSchema.validate(config);
+
+    if (error) {
+        throw new CollectionConfigError(error.message);
     }
 
     _.forEach(layerGroups, (group, groupName) => {
-        if (!isFolderNameSafe(groupName)) {
-            throw new CollectionConfigError(
-                `Layer name '${groupName}' is not a folder name safe string.`
-            );
-        }
-        if (!fs.existsSync(path.join(collectionPath, "layers", groupName))) {
+        const layerGroupPath = path.join(collectionPath, "layers", groupName);
+        if (!fs.existsSync(layerGroupPath)) {
             throw new CollectionConfigError(
                 `Layer '${groupName}' does not exist in collection's 'layers' folder.`
             );
         }
-        if (typeof group.rarity !== "number") {
-            throw new CollectionConfigError(
-                `Layer group '${groupName}' has a non-number rarity.`
-            );
-        }
-        if (group.rarity < 0 || group.rarity > 1) {
-            throw new CollectionConfigError(
-                `Layer group '${groupName}' has a rarity of ${group.rarity} which is not between 0 and 1.`
-            );
-        }
-        if (!_.isArray(group.layers)) {
-            throw new CollectionConfigError(
-                `Layer group '${groupName}' layers is not an array.`
-            );
-        }
 
-        const usedLayers: string[] = [];
-        let hasAutoLayer = false;
-        let raritySum = 0;
-        group.layers.forEach((layer, i) => {
-            if (typeof layer.name !== "string") {
+        group.layers.forEach((layer) => {
+            const layerPath = path.join(layerGroupPath, `${layer.name}.png`);
+            if (!fs.existsSync(layerPath)) {
                 throw new CollectionConfigError(
-                    `${groupName}'s layer #${i + 1} name is not a string.`
+                    `Layer '${layer.name}.png' does not exist in layer group '${groupName}' folder.`
                 );
             }
-            if (usedLayers.indexOf(layer.name) !== -1) {
-                throw new CollectionConfigError(
-                    `${groupName}'s '${layer.name}' layer is duplicated.`
-                );
-            }
-            usedLayers.push(layer.name);
-            if (typeof layer.rarity !== "number") {
-                throw new CollectionConfigError(
-                    `${groupName}'s '${layer.name}' layer has a non-number rarity.`
-                );
-            }
-            if (layer.rarity < 0 || layer.rarity > 1) {
-                throw new CollectionConfigError(
-                    `${groupName}'s '${layer.name}' layer has a rarity of ${group.rarity} which is not between 0 and 1.`
-                );
-            }
-            if (layer.rarity === 0) {
-                hasAutoLayer = true;
-            }
-            raritySum += layer.rarity;
         });
-
-        if (
-            raritySum > 1 ||
-            (!hasAutoLayer && raritySum !== 1 && group.layers.length > 1)
-        ) {
-            throw new CollectionConfigError(
-                `${groupName}'s layers rarity do not add up to 1. Use 0 on at least one layer to make its rarity automatic or make sure their rarity sum is equal to 1.`
-            );
-        }
-    });
-
-    const usedLayerOrder: string[] = [];
-    _.forEach(layerOrder, (order) => {
-        if (typeof order === "string") {
-            if (!layerGroups[order]) {
-                throw new CollectionConfigError(
-                    `Found layerOrder '${order}', but that name does not exist in layerGroups.`
-                );
-            }
-            if (usedLayerOrder.indexOf(order) !== -1) {
-                throw new CollectionConfigError(
-                    `Found layer '${order}' in layerOrder more than once.`
-                );
-            }
-            usedLayerOrder.push(order);
-        } else if (Array.isArray(order)) {
-            if (order.length < 2) {
-                throw new CollectionConfigError(
-                    `Found layerOrder '${order}' as single element. Remove the array and use the layer name or add more layers to the array.`
-                );
-            }
-            let raritySum = 0;
-            _.forEach(order, (layer) => {
-                if (typeof layer !== "string") {
-                    throw new CollectionConfigError(
-                        "layerOrder elements defined as an array must be an array of strings."
-                    );
-                }
-                const layerGroup = layerGroups[layer];
-                if (!layerGroup) {
-                    throw new CollectionConfigError(
-                        `layerOrder '${layer}' does not exist in layerGroups.`
-                    );
-                }
-                if (usedLayerOrder.indexOf(layer) !== -1) {
-                    throw new CollectionConfigError(
-                        `layerOrder '${layer}' is found more than once.`
-                    );
-                }
-                usedLayerOrder.push(layer);
-                raritySum += layerGroup.rarity;
-            });
-            if (raritySum > 1) {
-                throw new CollectionConfigError(
-                    `'${order.join(
-                        ", "
-                    )}' layers do not add up to 1. Use 0 on at least one layer to make it's rarity automatic or make sure their rarity sum is equal to 1.`
-                );
-            }
-        } else {
-            throw new CollectionConfigError(
-                "layerOrder element is neither a string or an array."
-            );
-        }
     });
 };
