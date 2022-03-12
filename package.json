@@ -15,7 +15,7 @@
         "build:types": "tsc -p tsconfig.prod.json --declaration --declarationMap --emitDeclarationOnly --declarationDir dist/@types",
         "reinstall": "npm run clean && rm -rf node_modules package-lock.json && npm install",
         "ig": "npm-run-all build && npm i -g .",
-        "release": "npm run build && np --no-tests --no-yarn"
+        "release": "npm run build && np --no-tests --no-yarn --any-branch"
     },
     "bin": "dist/cjs/index.js",
     "exports": {
